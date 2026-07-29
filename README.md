@@ -11,3 +11,5 @@ Topics covered
 8: firewall
 9: tuning
 10: Password reset..
+11: useradd
+12: usermod
