@@ -1,0 +1,902 @@
+ # Containers in RHEL 9 (Podman) - Beginner to Advanced (RHCSA EX200)
+
+---
+
+# Part 1: Why Containers Came Into the Picture
+
+Let's first understand the problem.
+
+## Era 1 - Running Applications Directly on OS
+
+Imagine one physical server.
+
+```text
++-----------------------+
+| Apache                |
+| MySQL                 |
+| Java Application      |
+| Python Application    |
++-----------------------+
+|         RHEL          |
++-----------------------+
+|       Hardware        |
++-----------------------+
+```
+
+Everything shares one operating system.
+
+### Problem 1
+
+Apache requires
+
+```text
+OpenSSL 1.1
+```
+
+while another application requires
+
+```text
+OpenSSL 3
+```
+
+One application upgrades OpenSSL.
+
+The other application breaks.
+
+This is called **dependency conflict**.
+
+---
+
+### Problem 2
+
+One application crashes and consumes
+
+```text
+100% CPU
+```
+
+Other applications become slow.
+
+---
+
+### Problem 3
+
+Application installation becomes complicated.
+
+Example
+
+```text
+Install Java
+Install Python
+Install libraries
+Install packages
+Configure services
+```
+
+Moving this application to another server means repeating everything.
+
+---
+
+# Solution 1 : Virtual Machines
+
+People invented Virtual Machines.
+
+```text
+Hardware
+
+        |
++------------------------+
+| Hypervisor             |
++------------------------+
+
+      |           |
+
+ VM1            VM2
+
+RHEL            Ubuntu
+
+Apache          MySQL
+```
+
+Each VM has
+
+- its own kernel
+- own filesystem
+- own libraries
+- own users
+
+No dependency conflict.
+
+---
+
+## But VM has problems
+
+Each VM contains
+
+```text
+Kernel
+System Libraries
+Systemd
+Bootloader
+Applications
+```
+
+Example
+
+One VM consumes
+
+```text
+2GB RAM
+```
+
+Ten VMs
+
+```text
+20GB RAM
+```
+
+Startup time
+
+```text
+1-3 minutes
+```
+
+Disk
+
+```text
+20GB each
+```
+
+Very heavy.
+
+---
+
+# Solution 2 : Containers
+
+Instead of virtualizing the hardware,
+
+Containers virtualize the **Operating System**.
+
+```text
+Hardware
+
+      |
+
+RHEL Kernel
+
+      |
+
+Container Runtime (Podman)
+
+      |
+
+Container A
+Container B
+Container C
+```
+
+Notice something important.
+
+Only **ONE KERNEL**
+
+Every container shares it.
+
+---
+
+Containers don't boot Linux.
+
+They **use the host kernel.**
+
+This is the biggest idea.
+
+---
+
+# VM vs Container
+
+```text
+Virtual Machine
+
+Hardware
+
+↓
+
+Hypervisor
+
+↓
+
+Guest Kernel
+
+↓
+
+Applications
+```
+
+Container
+
+```text
+Hardware
+
+↓
+
+Host Kernel
+
+↓
+
+Podman
+
+↓
+
+Container
+```
+
+No guest kernel.
+
+That makes containers
+
+- lightweight
+- faster
+- smaller
+
+---
+
+# Why is this important?
+
+Suppose your application only needs
+
+```text
+Python
+Flask
+Requests Library
+```
+
+Instead of copying an entire OS,
+
+Container only includes
+
+```text
+Python
+Flask
+Libraries
+Application
+```
+
+Much smaller.
+
+---
+
+# Example
+
+VM
+
+```text
+4 GB
+```
+
+Container
+
+```text
+200 MB
+```
+
+---
+
+# Boot Time
+
+VM
+
+```text
+2 minutes
+```
+
+Container
+
+```text
+1 second
+```
+
+---
+
+# Resource Usage
+
+VM
+
+```text
+Needs RAM for kernel
+```
+
+Container
+
+```text
+Shares existing kernel
+```
+
+---
+
+# Real Life Analogy
+
+Imagine apartments.
+
+VM
+
+Every apartment has
+
+- its own generator
+- own water tank
+- own security
+- own electricity
+
+Very expensive.
+
+---
+
+Container
+
+One building
+
+Everyone shares
+
+- generator
+- security
+- electricity
+
+Each apartment only has furniture.
+
+That's exactly containers.
+
+---
+
+# Why RHEL Uses Podman
+
+Docker originally required
+
+```text
+dockerd
+```
+
+running as
+
+```text
+root
+```
+
+Red Hat wanted
+
+- better security
+- daemon-less architecture
+- rootless containers
+
+So Red Hat adopted
+
+**Podman**
+
+---
+
+# Docker Architecture
+
+```text
+docker CLI
+
+↓
+
+dockerd
+
+↓
+
+containerd
+
+↓
+
+runc
+```
+
+Everything goes through the daemon.
+
+---
+
+# Podman Architecture
+
+```text
+podman CLI
+
+↓
+
+conmon
+
+↓
+
+runc/crun
+
+↓
+
+Container
+```
+
+No central daemon.
+
+Each container is independent.
+
+---
+
+# Rootless Containers
+
+This is very important for RHCSA.
+
+Normal user
+
+```text
+sarthak
+```
+
+can run
+
+```text
+podman run
+```
+
+without becoming root.
+
+Container only has permissions of that user.
+
+Much safer.
+
+---
+
+# Podman vs Docker
+
+| Docker | Podman |
+|----------|---------|
+| Daemon | No daemon |
+| Root by default | Rootless supported |
+| Docker Engine | Uses libpod |
+| Docker CLI | Podman CLI almost identical |
+| Used everywhere | Default on RHEL |
+
+---
+
+# Important Container Terminology
+
+---
+
+## 1. Image
+
+Image is a template.
+
+Think of it as
+
+```text
+ISO
+```
+
+for containers.
+
+It contains
+
+```text
+Libraries
+Packages
+Application
+Configuration
+```
+
+Example
+
+```text
+ubi9
+python
+nginx
+httpd
+```
+
+Image cannot run.
+
+It is read-only.
+
+---
+
+## 2. Container
+
+Running instance of an image.
+
+Image
+
+↓
+
+Container
+
+Like
+
+```text
+ISO
+
+↓
+
+Installed OS
+```
+
+---
+
+## 3. Registry
+
+Storage location of images.
+
+Examples
+
+- Red Hat Registry
+- Quay
+- Docker Hub
+
+Example
+
+```text
+registry.redhat.io
+```
+
+---
+
+## 4. Pull
+
+Download image.
+
+```bash
+podman pull ubi9
+```
+
+---
+
+## 5. Run
+
+Create container from image.
+
+```bash
+podman run ubi9
+```
+
+---
+
+## 6. Repository
+
+Collection of images.
+
+Example
+
+```text
+ubi9
+
+latest
+9.4
+9.5
+9.6
+```
+
+---
+
+## 7. Tag
+
+Version.
+
+```text
+ubi9:latest
+
+ubi9:9.4
+```
+
+---
+
+## 8. Container ID
+
+Unique ID.
+
+```text
+3d9fae2b
+```
+
+Every container has one.
+
+---
+
+## 9. Volume
+
+Persistent storage.
+
+Normally
+
+```text
+Container deleted
+
+↓
+
+Everything deleted
+```
+
+Volume keeps data outside the container.
+
+---
+
+## 10. Bind Mount
+
+Share host directory.
+
+```text
+Host
+
+/data
+
+↓
+
+Container
+
+/var/www/html
+```
+
+---
+
+## 11. Namespace
+
+Namespaces isolate resources so each container thinks it has its own environment.
+
+Common namespaces include:
+
+- PID namespace – separate process IDs.
+- Network namespace – separate network interfaces and IPs.
+- Mount namespace – separate filesystem view.
+- UTS namespace – separate hostname.
+- IPC namespace – separate inter-process communication.
+- User namespace – maps container users to host users (important for rootless Podman).
+
+---
+
+## 12. Cgroups
+
+Control Groups limit and account for resources.
+
+Examples
+
+```text
+CPU
+
+RAM
+
+Disk I/O
+```
+
+Without cgroups,
+
+One container could consume all system resources.
+
+---
+
+# How Container Actually Starts
+
+Suppose you type
+
+```bash
+podman run ubi9
+```
+
+Internally
+
+```text
+Step 1
+
+Podman checks
+
+Do I have image?
+
+↓
+
+No
+
+↓
+
+Downloads image
+```
+
+---
+
+Step 2
+
+```text
+Creates writable layer
+```
+
+Image stays read-only.
+
+Container gets
+
+```text
+New writable filesystem
+```
+
+---
+
+Step 3
+
+Creates
+
+- namespaces
+- cgroups
+
+---
+
+Step 4
+
+Uses
+
+```text
+crun
+```
+
+(or `runc`) to start the container process.
+
+---
+
+Step 5
+
+Application starts.
+
+No Linux boot.
+
+No systemd (unless specifically configured).
+
+No GRUB.
+
+No kernel startup.
+
+Just your application.
+
+---
+
+# Image Layers
+
+Container images are built in layers.
+
+```text
+Layer 1
+
+UBI 9
+
+↓
+
+Layer 2
+
+Python
+
+↓
+
+Layer 3
+
+Application
+
+↓
+
+Layer 4
+
+Configuration
+```
+
+Every layer is read-only.
+
+Container adds
+
+```text
+Writable Layer
+```
+
+on top.
+
+This layered design allows images to share common layers, reducing storage and download time.
+
+---
+
+# Container Lifecycle
+
+```text
+Image
+
+↓
+
+Pull
+
+↓
+
+Run
+
+↓
+
+Running
+
+↓
+
+Stop
+
+↓
+
+Start
+
+↓
+
+Remove
+```
+
+---
+
+# Where RHCSA Focuses (EX200)
+
+For RHCSA on RHEL 9, you should be comfortable with:
+
+- Installing Podman.
+- Searching and pulling images.
+- Running containers.
+- Listing running and stopped containers.
+- Starting, stopping, restarting, and removing containers.
+- Managing images.
+- Running rootless containers.
+- Exposing container ports.
+- Using bind mounts or named volumes for persistent data.
+- Creating systemd units for containers (depending on exam objectives).
+- Configuring containers to start automatically after reboot.
+
+---
+
+# Commands You Should Master
+
+```bash
+podman search
+podman pull
+podman images
+podman run
+podman ps
+podman ps -a
+podman stop
+podman start
+podman restart
+podman rm
+podman rmi
+podman exec
+podman logs
+podman inspect
+podman cp
+podman port
+podman volume
+```
+
+---
+
+# RHCSA Memory Map
+
+```text
+Problem
+│
+├── Dependency conflicts
+├── Slow deployment
+├── Heavy virtual machines
+└── Resource waste
+
+Solution
+│
+└── Containers
+
+Container
+│
+├── Image
+├── Registry
+├── Podman
+├── Namespaces
+├── Cgroups
+├── Writable Layer
+└── Shared Host Kernel
+
+Lifecycle
+│
+Pull
+↓
+Image
+↓
+Run
+↓
+Container
+↓
+Stop
+↓
+Remove
+```
