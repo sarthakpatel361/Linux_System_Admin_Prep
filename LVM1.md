@@ -681,6 +681,17 @@ mount -a
 
 ---
 
+| Layer                    | One can contain many?    | Example                  |
+| ------------------------ | ------------------------ | ------------------------ |
+| Disk → Partitions        | ✅ Yes                    | `/dev/sdb1`, `/dev/sdb2` |
+| Partition → PV           | ❌ No                     | One partition = One PV   |
+| PV → VG                  | ❌ No                     | One PV belongs to one VG |
+| VG → PV                  | ✅ Yes                    | VG can include many PVs  |
+| VG → LV                  | ✅ Yes                    | Many LVs inside one VG   |
+| LV → Filesystem          | Usually one              | One filesystem per LV    |
+| Filesystem → Mount Point | Usually one active mount | Mounted at `/data`       |
+
+
 # RHCSA Practice Question
 
 A new disk `/dev/sdc` has been added to your RHEL 9 system.
