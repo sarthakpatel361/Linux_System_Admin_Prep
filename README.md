@@ -14,3 +14,6 @@ Topics covered
 11: useradd
 12: usermod
 13: ACL
+14: UMASK
+15: AUTOFS NFS
+16: NTP
