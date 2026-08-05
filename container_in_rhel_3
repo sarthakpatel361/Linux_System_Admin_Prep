@@ -1,1 +1,551 @@
+# EX200 Podman & Containers – Conceptual Notes
+
+> These notes summarize the key concepts behind Podman, images, containers, rootless containers, volume mounts, and systemd services based on hands-on practice.
+
+---
+
+# 1. Everything revolves around the Image
+
+Initially, it seems like there are many separate concepts:
+
+* Containerfile
+* Image
+* Container
+* Volume Mounts
+* Systemd
+* Rootless Containers
+* Auto-start
+
+In reality, they all follow one workflow.
+
+```text
+Containerfile
+      │
+      ▼
+podman build
+      │
+      ▼
+Image
+      │
+      ▼
+podman run
+      │
+      ▼
+Container
+      │
+      ▼
+podman generate systemd
+      │
+      ▼
+systemctl --user enable
+      │
+      ▼
+Automatic startup after reboot
+```
+
+Everything begins with an **Image**.
+
+---
+
+# 2. Image = Blueprint (Template)
+
+An image is **not** a running container.
+
+Think of it as a template.
+
+```text
+Image
+   │
+   ├────► Container 1
+   ├────► Container 2
+   ├────► Container 3
+   └────► Container 4
+```
+
+One image can create **unlimited containers**.
+
+Example:
+
+```bash
+podman run --name web1 meraimage
+podman run --name web2 meraimage
+podman run --name web3 meraimage
+```
+
+The image remains unchanged.
+
+---
+
+# 3. Containerfile ≠ Container
+
+The Containerfile contains instructions.
+
+Example:
+
+```dockerfile
+FROM registry.access.redhat.com/ubi9/ubi:latest
+
+CMD ["sleep", "infinity"]
+```
+
+Workflow:
+
+```text
+Containerfile
+      │
+      ▼
+Build
+      │
+      ▼
+Image
+      │
+      ▼
+Run
+      │
+      ▼
+Container
+```
+
+---
+
+# 4. Understanding "."
+
+Command:
+
+```bash
+podman build -t myimage .
+```
+
+Many beginners think "." means:
+
+> Use this file.
+
+It actually means:
+
+> Use this directory as the build context.
+
+Podman automatically searches only for:
+
+```
+Containerfile
+```
+
+or
+
+```
+Dockerfile
+```
+
+If your file has another name:
+
+```
+mycontainerfile
+```
+
+then use:
+
+```bash
+podman build -t myimage -f mycontainerfile .
+```
+
+---
+
+# 5. Host vs Container
+
+Volume mount syntax:
+
+```bash
+-v HOST_PATH:CONTAINER_PATH:OPTIONS
+```
+
+Always remember:
+
+```text
+HOST
+ │
+ ▼
+CONTAINER
+```
+
+Example:
+
+```bash
+-v /opt/files:/opt/incoming:Z
+```
+
+means
+
+```text
+Host
+/opt/files
+
+↓
+
+Container
+/opt/incoming
+```
+
+Left side = Host
+
+Right side = Container
+
+---
+
+# 6. Why ":Z"?
+
+```bash
+-v /opt/files:/opt/incoming:Z
+```
+
+The `:Z` tells SELinux to relabel the mounted directory so the container can access it.
+
+Without `:Z`, you may receive:
+
+```
+Permission denied
+```
+
+even when Linux file permissions are correct.
+
+---
+
+# 7. Does Podman create Container Directories?
+
+Suppose your image contains only:
+
+```dockerfile
+FROM registry.access.redhat.com/ubi9/ubi:latest
+
+CMD ["sleep","infinity"]
+```
+
+There is no:
+
+```
+/opt/incoming
+```
+
+or
+
+```
+/opt/outgoing
+```
+
+When you run:
+
+```bash
+podman run \
+-v /opt/files:/opt/incoming \
+-v /opt/processed:/opt/outgoing
+```
+
+Podman prepares those mount points inside the running container and mounts the host directories.
+
+The image itself is **not modified**.
+
+---
+
+# 8. Build vs Run
+
+## Build
+
+```bash
+podman build
+```
+
+Creates
+
+```
+Image
+```
+
+---
+
+## Run
+
+```bash
+podman run
+```
+
+Creates
+
+```
+Container
+```
+
+These are completely different operations.
+
+---
+
+# 9. Images are Immutable Templates
+
+Suppose:
+
+```text
+Image
+```
+
+creates
+
+```text
+Container A
+Container B
+Container C
+```
+
+Changing Container A does **not** affect:
+
+* Container B
+* Container C
+* Image
+
+Each container has its own writable layer.
+
+---
+
+# 10. Why "sleep infinity"?
+
+Without:
+
+```dockerfile
+CMD ["sleep","infinity"]
+```
+
+Container:
+
+```text
+Starts
+↓
+
+Finishes
+↓
+
+Stops
+```
+
+With:
+
+```dockerfile
+CMD ["sleep","infinity"]
+```
+
+Container:
+
+```text
+Starts
+↓
+
+Keeps Running
+↓
+
+Can be Managed
+```
+
+Perfect for EX200 practice.
+
+---
+
+# 11. Rootless Container
+
+A rootless container simply means:
+
+The **container is owned by a regular user**, not root.
+
+Example:
+
+```
+natasha
+maria
+walhalla
+harry
+```
+
+The systemd service is stored in:
+
+```
+~/.config/systemd/user/
+```
+
+instead of
+
+```
+/etc/systemd/system/
+```
+
+---
+
+# 12. EX200 Workflow
+
+Almost every EX200 Podman question follows this pattern.
+
+```text
+Login as required user
+        │
+        ▼
+podman run
+        │
+        ▼
+podman generate systemd
+        │
+        ▼
+Move service
+(~/.config/systemd/user/)
+        │
+        ▼
+systemctl --user daemon-reload
+        │
+        ▼
+systemctl --user enable --now
+        │
+        ▼
+loginctl enable-linger USER
+        │
+        ▼
+Verify
+```
+
+Only these values change from question to question:
+
+* Image Name
+* Container Name
+* Username
+* Host Directory
+* Container Directory
+* Service Name
+
+The workflow remains the same.
+
+---
+
+# 13. Relationship Between Components
+
+```text
+Containerfile
+        │
+        ▼
+Image (Template)
+        │
+        ├────────► Container 1
+        ├────────► Container 2
+        ├────────► Container 3
+        └────────► Container N
+```
+
+One image can create many containers.
+
+One container cannot create an image unless explicitly committed.
+
+---
+
+# 14. Commands Worth Memorizing
+
+## Build Image
+
+```bash
+podman build -t IMAGE_NAME .
+```
+
+or
+
+```bash
+podman build -t IMAGE_NAME -f MY_CONTAINERFILE .
+```
+
+---
+
+## List Images
+
+```bash
+podman images
+```
+
+or
+
+```bash
+podman image list
+```
+
+---
+
+## Run Container
+
+```bash
+podman run -d \
+--name CONTAINER_NAME \
+-v HOST_DIR:CONTAINER_DIR:Z \
+IMAGE_NAME
+```
+
+---
+
+## Generate systemd Service
+
+```bash
+podman generate systemd \
+--name CONTAINER_NAME \
+--files
+```
+
+---
+
+## Reload systemd
+
+```bash
+systemctl --user daemon-reload
+```
+
+---
+
+## Enable Service
+
+```bash
+systemctl --user enable --now container-CONTAINER_NAME.service
+```
+
+---
+
+## Enable Linger
+
+```bash
+loginctl enable-linger USERNAME
+```
+
+---
+
+# Final Takeaway
+
+Instead of memorizing different EX200 questions, memorize **one workflow**.
+
+```text
+Containerfile
+      │
+      ▼
+Build Image
+      │
+      ▼
+Run Container
+      │
+      ▼
+Generate systemd Service
+      │
+      ▼
+Enable Service
+      │
+      ▼
+Enable Linger
+      │
+      ▼
+Verify
+```
+
+Once you understand this flow, most EX200 container questions become a matter of replacing:
+
+* Image Name
+* Container Name
+* User Name
+* Host Paths
+* Container Paths
+* Service Name
+
+The underlying process stays the same.
 
