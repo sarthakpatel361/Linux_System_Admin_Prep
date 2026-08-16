@@ -17,4 +17,5 @@ Topics covered
 14: UMASK
 15: AUTOFS NFS
 16: NTP
-17: Journalctl
+17: Journalctl.
+18: Systemctl
