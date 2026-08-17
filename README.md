@@ -19,3 +19,4 @@ Topics covered
 16: NTP
 17: Journalctl.
 18: Systemctl
+19:  timedatectl
