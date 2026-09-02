@@ -20,4 +20,4 @@ Topics covered
 17: Journalctl.
 18: Systemctl
 19:  timedatectl..
-20: Flatpack.
+
