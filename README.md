@@ -2,7 +2,7 @@
 
 A practical, scenario-driven Linux System Administrator interview preparation workbook designed for candidates who already understand Linux fundamentals and have completed RHCSA-level training.
 
-This repository focuses on **real-world administration tasks**, **production troubleshooting**, and **interview thinking patterns** rather than memorizing commands or question-answer dumps..
+This repository focuses on **real-world administration tasks**, **production troubleshooting**, and **interview thinking patterns** rather than memorizing commands or question-answer dumps...
 
 ---
 
