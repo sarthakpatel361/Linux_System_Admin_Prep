@@ -6,7 +6,7 @@ This repository focuses on **real-world administration tasks**, **production tro
 
 ---
 
-## Objective
+## Objective.
 
 Most Linux interview preparation material follows a simple pattern:
 
