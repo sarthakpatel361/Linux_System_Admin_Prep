@@ -1,4 +1,4 @@
-# Linux System Administrator Interview Workbook (10 Days)..
+# Linux System Administrator Interview Workbook (10 Days)...
 
 A practical, scenario-driven Linux System Administrator interview preparation workbook designed for candidates who already understand Linux fundamentals and have completed RHCSA-level training.
 
