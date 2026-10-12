@@ -35,7 +35,7 @@ The goal is to help candidates think like a Linux System Administrator rather th
 
 ---
 
-# Target Audience
+
 
 This workbook is designed for:
 
