@@ -18,7 +18,7 @@ Real system administration does not work that way.
 
 In production environments, administrators are expected to:
 
-* Diagnose problems
+* Diagnose problems.
 * Investigate logs
 * Analyze symptoms
 * Apply fixes with minimal downtime
