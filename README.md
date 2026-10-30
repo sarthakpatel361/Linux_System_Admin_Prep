@@ -4,7 +4,7 @@ A practical, scenario-driven Linux System Administrator interview preparation wo
 ....
 This repository focuses on **real-world ..administration tasks**, **production .troubleshooting**, and **interview thinking patterns** rather than memorizing commands or question-answer dumps......
 .
----
+----
 
 ## Objective.
 
